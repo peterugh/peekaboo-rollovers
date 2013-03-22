@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta charset="UTF-8" />
+<title>Peek-a-boo Button Rollover</title>
+<link href="css/peekaboo.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<article>
+	<h1>Peek-a-boo Buttons</h1>
+	<p>
+		This plugin lets you slide create a peek-a-boo style button roll over. See a basic example below.
+	</p>
+	<button id="btn_basic">
+		Basic Peek-a-boo
+	</button>
+	<p>
+		Here's a button that has a modified look on roll over.
+	</p>
+	<button id="btn_simple">
+		Simple Peek-a-boo
+	</button>
+</article>
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script type="text/javascript" src="js/peekaboo.0.1.js"></script>
+<script type="text/javascript">
+
+	function init()
+	{
+		//basic button
+		$("#btn_basic").buttonRoll();
+
+		//simple button
+		$("#btn_simple").buttonRoll({
+			overMoreCSS: {
+				backgroundColor: '#2ee20b'
+			},
+			slideInFrom: 'right',
+			slideOutTo: 'top',
+		});
+	}
+
+	$(document).ready(init);
+</script>
+</body>
+</html>

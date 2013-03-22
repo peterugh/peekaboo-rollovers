@@ -1,0 +1,47 @@
+@charset "UTF-8";
+
+button,
+a,
+div {
+	display: inline-block;
+	text-align: center;
+	border:none;
+	cursor: pointer;
+	text-transform: uppercase;
+}
+#btn_basic {
+	width:200px;
+	height:40px;
+	background: #00c0ff;
+	font-size: 14px;
+	color: #555;
+	background: #f9f9f9;
+	font-weight: bold;
+	background: -moz-linear-gradient(top, #f9f9f9 0%, #d1d1d1 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f9f9f9), color-stop(100%,#d1d1d1));
+	background: -webkit-linear-gradient(top, #f9f9f9 0%,#d1d1d1 100%);
+	background: -o-linear-gradient(top, #f9f9f9 0%,#d1d1d1 100%);
+	background: -ms-linear-gradient(top, #f9f9f9 0%,#d1d1d1 100%);
+	background: linear-gradient(to bottom, #f9f9f9 0%,#d1d1d1 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f9f9f9', endColorstr='#d1d1d1',GradientType=0 ); /* IE6-9 */
+	-moz-text-shadow: 0 2px 1px  #fff;
+	-webkit-text-shadow: 0 2px 1px  #fff;
+	text-shadow: 0 2px 1px  #fff;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	line-height: 40px;
+}
+#btn_simple {
+	width:200px;
+	height:40px;
+	background: #ff9600;
+	font-size: 14px;
+	color: #fff;
+	line-height: 40px;
+}
+#btn_non_text {
+	width:400px;
+	height:300px;
+	border: 1px solid #000;
+}
+
