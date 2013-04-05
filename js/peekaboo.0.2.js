@@ -8,7 +8,7 @@
  */
 
 
-;jQuery.fn.buttonRoll = function(options) 
+;jQuery.fn.peekAboo = function(options) 
 {
 	"use strict";
 
