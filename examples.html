@@ -23,16 +23,18 @@
 	</button>
 </article>
 <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
-<script type="text/javascript" src="js/peekaboo.0.1.js"></script>
+<script type="text/javascript" src="js/peekaboo.0.2.js"></script>
 <script type="text/javascript">
 
-	function init()
+	var page = {};
+
+	page.init = function()
 	{
 		//basic button
-		$("#btn_basic").buttonRoll();
+		$("#btn_basic").peekAboo();
 
 		//simple button
-		$("#btn_simple").buttonRoll({
+		$("#btn_simple").peekAboo({
 			overMoreCSS: {
 				backgroundColor: '#2ee20b'
 			},
@@ -41,7 +43,8 @@
 		});
 	}
 
-	$(document).ready(init);
+	$(document).ready(page.init);
+
 </script>
 </body>
 </html>
