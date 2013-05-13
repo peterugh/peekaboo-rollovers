@@ -1,7 +1,7 @@
 /**
  *
- * ButtonRoll Plugin
- * Used for adding a simple button rollup effect
+ * Peek-a-boo Plugin
+ * Used for adding a simple button peek in/out effect
  *
  * @author Pete Rugh peterugh@gmail.com 
  *
@@ -19,11 +19,14 @@
 		slideInFrom: 'bottom',
 		slideOutTo: 'bottom',
 		speed: 100,
-		upMoreCSS: {}
+		upMoreCSS: {},
+		buttonsReady: function(){}
 	}, options),
 	button,
+	buttonCount,
 	buttonHeight,
 	buttonWidth,
+	buttonsToLoad,
 	overBtnPosX_1,
 	overBtnPosY_1,
 	overBtnPosX_2,
@@ -82,8 +85,11 @@
 		}, settings.speed, settings.easingMethod);
 	}
 
-	this.each(function()
+	buttonsToLoad = this.length;
+
+	this.each(function(count)
 	{
+		buttonCount = count + 1;
 		//Assign jquery object to simple variable
 		button = $(this);
 
@@ -226,6 +232,13 @@
 
 		//Listen for the hover event
 		button.hover(rollOn, rollOff);
+
+		// this provides a callback for the user to
+		// operate on the button after it has loaded
+		if(buttonCount == buttonsToLoad)
+		{
+			settings.buttonsReady();
+		}
 		
 	});
 };
