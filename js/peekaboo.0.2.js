@@ -1,3 +1,5 @@
+"use strict"
+
 /**
  *
  * Peek-a-boo Plugin
@@ -7,238 +9,314 @@
  *
  */
 
+	// Requires some Green Sock Animation Platform files
+	// http://www.greensock.com/gsap-js/
+	// CSSPlugin.min.js
+	// TweenLite.min.js
 
-;jQuery.fn.peekAboo = function(options) 
+PeekAboo._bindCtor = function(){};
+PeekAboo._addListenerMethod = null;
+PeekAboo._removeListenerMethod =  null;
+
+PeekAboo.bind = function(func, context)
 {
-	"use strict";
-
-	var settings = $.extend(
+	// binding scope to event listeners function courtesy of Dane Hansen: www.danehansen.com
+	if(Function.prototype.bind && func.bind === Function.prototype.bind)
+		return Function.prototype.bind.apply(func, Array.prototype.slice.call(arguments, 1));
+	var args=Array.prototype.slice.call(arguments, 2);
+	var bound;
+	return bound = function()
 	{
-		easingMethod: 'linear',
-		overMoreCSS: {},
-		slideInFrom: 'bottom',
-		slideOutTo: 'bottom',
-		speed: 100,
-		upMoreCSS: {},
-		buttonsReady: function(){}
-	}, options),
-	button,
-	buttonCount,
-	buttonHeight,
-	buttonWidth,
-	buttonsToLoad,
-	overBtnPosX_1,
-	overBtnPosY_1,
-	overBtnPosX_2,
-	overBtnPosY_2,
-	overDeclarations = {},
-	overState,
-	positionAssignment = 'relative',
-	upBtnPosX_1,
-	upBtnPosY_1,
-	upBtnPosX_2,
-	upBtnPosY_2,
-	upDeclarations = {},
-	upState;
+		if(!(this instanceof bound))
+			return func.apply(context, args.concat(Array.prototype.slice.call(arguments)));
+		PeekAboo._bindCtor.prototype=func.prototype;
+		var self = new PeekAboo._bindCtor;
+		PeekAboo._bindCtor.prototype=null;
+		var result = func.apply(self, args.concat(Array.prototype.slice.call(arguments)));
+		if(Object(result) === result)
+			return result;
+		return self;
+	};
+}
 
+function PeekAboo(elements, options)
+{
+	this.DOM_ELEMENTS = elements;
+	if(!options)
+		options = {};
+	this.EASING_METHOD = options.easingMethod ? options.easingMethod: 'Linear.easeNone';
+	this.OVER_MORE_CSS = options.overMoreCSS ? options.overMoreCSS: {};
+	this.SLIDE_IN_FROM = options.slideInFrom ? options.slideInFrom: 'bottom';
+	this.SLIDE_OUT_TO = options.slideOutTo ? options.slideOutTo: 'bottom';
+	this.speedOption = options.speed ? options.speed: 100;
+	this.SPEED = this.speedOption / 1000;
+	this.UP_MORE_CSS = options.upMoreCSS ? options.upMoreCSS: {};
+	this.BUTTONS_READY = options.buttonsReady ? options.buttonsReady: function(buttons,numButtons){};
+	this.button;
+	this.buttonHeight;
+	this.buttonWidth;
+	this.overBtnPosX_1;
+	this.overBtnPosY_1;
+	this.overBtnPosX_2;
+	this.overBtnPosY_2;
+	this.overState;
+	this.positionAssignment = 'relative';
+	this.rolledOn = false;
+	this.rollOffAnimationDOMone = false;
+	this.rollOffAnimationDOMtwo = false;
+	this.rollOverAnimationDOMone = false;
+	this.rollOverAnimationDOMtwo = false;
+	this.upBtnPosX_1;
+	this.upBtnPosY_1;
+	this.upBtnPosX_2;
+	this.upBtnPosY_2;
+	this.upState;
+	this._rollOnHandler = PeekAboo.bind(this.rollOn,this);
+	this._rollOffHandler = PeekAboo.bind(this.rollOff, this);
 
-	function rollOn()
+	if(!PeekAboo._addListenerMethod)
 	{
-		//set the proper starting positions for the buttons
-		$(' .buttonroll_up_state', $(this)).css({
-			left: 0,
-			top: 0
-		});
-		$(' .buttonroll_over_state', $(this)).css({
-			left: overBtnPosX_1,
-			top: overBtnPosY_1
-		});
+		var testElement = document.createElement('a');
+		if(testElement.addEventListener)
+		{
+			PeekAboo._addListenerMethod = 'addEventListener';
+			PeekAboo._removeListenerMethod = 'removeEventListener';
+		}
+		else if(testElement.attachEvent)
+		{
+			PeekAboo._addListenerMethod = 'attachEvent';
+			PeekAboo._removeListenerMethod = 'detachEvent';
+		}
+	}
+	if(this.DOM_ELEMENTS.length!=undefined && typeof this.DOM_ELEMENTS=="object")
+	{
+		for(var i=0, numElements = this.DOM_ELEMENTS.length; i < numElements; i++)
+		{
+			this._prepareElement(this.DOM_ELEMENTS[i], i + 1);
+			this.DOM_ELEMENTS[i][PeekAboo._addListenerMethod]("mouseenter", this._rollOnHandler);
+			this.DOM_ELEMENTS[i][PeekAboo._addListenerMethod]("mouseleave", this._rollOffHandler);
+		}
+		this.BUTTONS_READY(this.DOM_ELEMENTS, this.DOM_ELEMENTS.length);
+	}
+	else
+	{
+		this._prepareElement(this.DOM_ELEMENTS, 0);
+		this.DOM_ELEMENTS[PeekAboo._addListenerMethod]("mouseenter", this._rollOnHandler);
+		this.DOM_ELEMENTS[PeekAboo._addListenerMethod]("mouseleave", this._rollOffHandler);
+		this.BUTTONS_READY(this.DOM_ELEMENTS, 1);
+	}
+}
+	
+	// public methods 
 
-		// Animate roll over
-		$(' .buttonroll_up_state', $(this)).stop().animate({
-			left: upBtnPosX_1,
-			top: upBtnPosY_1
-		}, settings.speed, settings.easingMethod);
+	PeekAboo.prototype.rollOn = function(evt)
+	{
+		if(!this.rolledOn)
+		{
+			if(evt.target.className == 'peekaboo_up_state')
+			{
+				var topPart = evt.target;
+				var bottomPart = evt.target.nextElementSibling;
+			}
+			else
+			{
+				var topPart = evt.target.children[0];
+				var bottomPart = evt.target.children[1];
+			}
+			this.rolledOn = true;
 
-		$(' .buttonroll_over_state', $(this)).stop().animate({
-			left: 0,
-			top: 0
-		}, settings.speed, settings.easingMethod);
+			//set the proper starting positions for the buttons
+			if(this.rollOffAnimationDOMone !== false)
+			{
+				this.rollOffAnimationDOMone.kill();
+				this.rollOffAnimationDOMtwo.kill();	
+			}
+			if(typeof(topPart) != 'undefined')
+			{
+				topPart.style.left = '0px';
+				topPart.style.top = '0px';
+
+				bottomPart.style.left = this.overBtnPosX_1 + 'px';
+				bottomPart.style.top = this.overBtnPosY_1 + 'px';
+
+				// Animate roll over
+				this.rollOverAnimationDOMone = new TweenLite.to(topPart, this.SPEED, { left: this.upBtnPosX_1, top: this.upBtnPosY_1, ease:this.EASING_METHOD });
+				this.rollOverAnimationDOMtwo = new TweenLite.to(bottomPart, this.SPEED, { left: 0, top: 0, ease:this.EASING_METHOD });
+			}
+		}	
+	}
+	PeekAboo.prototype.rollOff = function(evt)
+	{
+		this.rolledOn = false;
+
+
+		evt.target.children[0].style.left = this.upBtnPosX_2 + 'px';
+		evt.target.children[0].style.top = this.upBtnPosY_2 + 'px';
+
+		evt.target.children[1].style.left = '0px';
+		evt.target.children[1].style.top = '0px';
+
+		this.rollOffAnimationDOMone = new TweenLite.to(evt.target.children[0], this.SPEED, { left: 0, top: 0, ease:this.EASING_METHOD });
+		this.rollOffAnimationDOMtwo = new TweenLite.to(evt.target.children[1], this.SPEED, { left: this.overBtnPosX_2, top: this.overBtnPosY_2, ease:this.EASING_METHOD });
 	}
 	
-	function rollOff(){
-		//set proper position for animation out
-		$(' .buttonroll_up_state', $(this)).css({
-			left: upBtnPosX_2,
-			top: upBtnPosY_2
-		});
-
-		// Animate roll out
-		$(' .buttonroll_up_state', $(this)).stop().animate({
-			left: 0,
-			top: 0
-		}, settings.speed, settings.easingMethod);
-
-		$(' .buttonroll_over_state', $(this)).stop().animate({
-			left: overBtnPosX_2,
-			top: overBtnPosY_2
-		}, settings.speed, settings.easingMethod);
-	}
-
-	buttonsToLoad = this.length;
-
-	this.each(function(count)
+	PeekAboo.prototype.kill = function()
 	{
-		buttonCount = count + 1;
-		//Assign jquery object to simple variable
-		button = $(this);
-
-		//wrap the plain text inside with span tag
-		button.wrapInner('<span class="buttonroll_up_state"/>');
-		
-		//Duplicate and then change class of current content
-		$(' .buttonroll_up_state', $(this))
-			.clone()
-			.removeClass('buttonroll_up_state')
-			.addClass('buttonroll_over_state')
-			.appendTo(button);
-		
-		// assign jQuery objects to simple variable
-		upState = $(' .buttonroll_up_state', $(this));
-		overState = $(' .buttonroll_over_state', $(this));
-		buttonHeight = button.outerHeight();
-		buttonWidth = button.outerWidth();
-		
-		//If the targeted element is positioned absolutely, then position it that way
-		//Otherwise, position is relatively because that is safer
-		if(button.css('position') == 'absolute')
+		if(this.DOM_ELEMENTS.length != undefined && typeof this.DOM_ELEMENTS == "object")
 		{
-			positionAssignment = 'absolute';
+			for(var i=0, numElements = this.DOM_ELEMENTS.length; i < numElements; i++)
+			{
+				this.DOM_ELEMENTS[i][PeekAboo._removeListenerMethod]("mouseenter", this._rollOnHandler);
+				this.DOM_ELEMENTS[i][PeekAboo._removeListenerMethod]("mouseleave", this._rollOffHandler);
+			}
 		}
 		else
 		{
-			positionAssignment = 'relative';
+			this.DOM_ELEMENTS[PeekAboo._removeListenerMethod]("mouseenter", this._rollOnHandler);
+			this.DOM_ELEMENTS[PeekAboo._removeListenerMethod]("mouseleave", this._rollOffHandler);
+		}
+	}
+
+	// private methods
+
+	PeekAboo.prototype._prepareElement = function(button, count)
+	{
+		this.button = button;
+		this.buttonHeight = button.offsetHeight;
+		this.buttonWidth = button.offsetWidth;
+		var innerElements = [];
+
+		for(var i = 0, numChildren = this.button.childNodes.length; i < numChildren; i++)
+		{
+			// store the element in an array
+			innerElements.push(this.button.childNodes[0]);
+			// remove the element (we'll re-add later)
+			this.button.removeChild(this.button.childNodes[0]);
+		}
+
+		this.upState = document.createElement('span');
+		this.overState = document.createElement('span');
+
+		this.upState.className = 'peekaboo_up_state';
+		this.overState.className = 'peekaboo_over_state';
+
+		this.button.appendChild(this.upState);
+		this.button.appendChild(this.overState);
+
+		for(var i=0, numNodes = innerElements.length; i < numNodes; i++)
+		{
+			this.button.children[0].appendChild(innerElements[i].cloneNode('deep'));
+			this.button.children[1].appendChild(innerElements[i]);
+		}
+
+		//If the targeted element is positioned absolutely, then position it that way
+		//Otherwise, position is relatively because that is safer
+		if(button.style.position == 'absolute')
+		{
+			this.positionAssignment = 'absolute';
+		}
+		else
+		{
+			this.positionAssignment = 'relative';
 		}
 
 		// Give the current button a pinch of CSS to assure the plugin positions properly
-		button.css({
-			position: positionAssignment,
-			overflow: 'hidden'
-		});	
+		this.button.style.position = this.positionAssignment;
+		this.button.style.overflow = 'hidden';
 		
 		// determine how the rollover should be positioned initially
-		switch (settings.slideInFrom) {
+		switch (this.SLIDE_IN_FROM) {
 			case 'bottom' :
 
-				overBtnPosX_1 = 0;
-				overBtnPosY_1 = buttonHeight;
+				this.overBtnPosX_1 = 0;
+				this.overBtnPosY_1 = this.buttonHeight;
 
-				upBtnPosX_1 = 0;
-				upBtnPosY_1 = buttonHeight * -1;
+				this.upBtnPosX_1 = 0;
+				this.upBtnPosY_1 = this.buttonHeight * -1;
 
 				break;
 			case 'top' :
 
-				overBtnPosX_1 = 0;
-				overBtnPosY_1 = buttonHeight * -1;
+				this.overBtnPosX_1 = 0;
+				this.overBtnPosY_1 = this.buttonHeight * -1;
 
-				upBtnPosX_1 = 0;
-				upBtnPosY_1 = buttonHeight;
+				this.upBtnPosX_1 = 0;
+				this.upBtnPosY_1 = this.buttonHeight;
 
 				break;
 			case 'left' :
 
-				overBtnPosX_1 = buttonWidth * -1;
-				overBtnPosY_1 = 0;
+				this.overBtnPosX_1 = this.buttonWidth * -1;
+				this.overBtnPosY_1 = 0;
 
-				upBtnPosX_1 = buttonWidth;
-				upBtnPosY_1 = 0;
+				this.upBtnPosX_1 = this.buttonWidth;
+				this.upBtnPosY_1 = 0;
 				
 				break;
 			case 'right' :
 
-				overBtnPosX_1 = buttonWidth;
-				overBtnPosY_1 = 0;
+				this.overBtnPosX_1 = this.buttonWidth;
+				this.overBtnPosY_1 = 0;
 
-				upBtnPosX_1 = buttonWidth * -1;
-				upBtnPosY_1 = 0;
+				this.upBtnPosX_1 = this.buttonWidth * -1;
+				this.upBtnPosY_1 = 0;
 				
 				break;
 			default :
 				break;
 		}
 
-		switch (settings.slideOutTo) {
+		switch (this.SLIDE_OUT_TO) {
 			case 'bottom' :
-				upBtnPosX_2 = 0;
-				upBtnPosY_2 = buttonHeight * -1;
+				this.upBtnPosX_2 = 0;
+				this.upBtnPosY_2 = this.buttonHeight * -1;
 
-				overBtnPosX_2 = 0;
-				overBtnPosY_2 = buttonHeight;
+				this.overBtnPosX_2 = 0;
+				this.overBtnPosY_2 = this.buttonHeight;
 
 				break;
 			case 'top' :
-				upBtnPosX_2 = 0;
-				upBtnPosY_2 = buttonHeight;
+				this.upBtnPosX_2 = 0;
+				this.upBtnPosY_2 = this.buttonHeight;
 
-				overBtnPosX_2 = 0;
-				overBtnPosY_2 = buttonHeight * -1;
+				this.overBtnPosX_2 = 0;
+				this.overBtnPosY_2 = this.buttonHeight * -1;
 				
 				break;
 			case 'left' :
-				upBtnPosX_2 = buttonWidth;
-				upBtnPosY_2 = 0;
+				this.upBtnPosX_2 = this.buttonWidth;
+				this.upBtnPosY_2 = 0;
 
-				overBtnPosX_2 = buttonWidth * -1;
-				overBtnPosY_2 = 0;
+				this.overBtnPosX_2 = this.buttonWidth * -1;
+				this.overBtnPosY_2 = 0;
 				
 				break;
 			case 'right' :
-				upBtnPosX_2 = buttonWidth * -1;
-				upBtnPosY_2 = 0;
+				this.upBtnPosX_2 = this.buttonWidth * -1;
+				this.upBtnPosY_2 = 0;
 
-				overBtnPosX_2 = buttonWidth;
-				overBtnPosY_2 = 0;
+				this.overBtnPosX_2 = this.buttonWidth;
+				this.overBtnPosY_2 = 0;
 				
 				break;
 			default :
 				break;
 		}
 
+		this.upState.style.position = 'absolute';
+		this.upState.style.height = this.buttonHeight + 'px';
+		this.upState.style.width = this.buttonWidth + 'px';
+		this.upState.style.left = '0px';
+		this.upState.style.top = '0px';
 
-		//Begin building CSS object for mandatory styling
-		upDeclarations = {
-			position: 'absolute',
-			height: buttonHeight,
-			width: buttonWidth,
-			left: 0,
-			top: 0
-		};
-		overDeclarations = {
-			position: 'absolute',
-			height: buttonHeight,
-			width: buttonWidth,
-			left: overBtnPosX_1,
-			top: overBtnPosY_1
-		};
+		this.overState.style.position = 'absolute';
+		this.overState.style.height = this.buttonHeight + 'px';
+		this.overState.style.width = this.buttonWidth + 'px';
+		this.overState.style.left = this.overBtnPosX_1 + 'px';
+		this.overState.style.top = this.overBtnPosY_1 + 'px';		
 
-		//mandatory css styling
-		upState.css(upDeclarations);
-		overState.css(overDeclarations);
-
-		//Add the user's custom CSS declarations
-		upState.css(settings.upMoreCSS);
-		overState.css(settings.overMoreCSS);
-
-		//Listen for the hover event
-		button.hover(rollOn, rollOff);
-
-		// this provides a callback for the user to
-		// operate on the button after it has loaded
-		if(buttonCount == buttonsToLoad)
+		for(var property in this.OVER_MORE_CSS)
 		{
-			settings.buttonsReady();
+			this.overState.style[property] = this.OVER_MORE_CSS[property];
 		}
-		
-	});
-};
+	}
