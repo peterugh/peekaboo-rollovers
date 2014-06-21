@@ -3,4 +3,28 @@ Peekaboo Rollovers
 
 A simple plugin for animating buttons with a simple slide effect.
 
-###Needs Documentation regarding CSS necessary to run correctly
+###Implementation
+
+####Pure JS Method: Default Values are Shown
+
+    var peekAboo = new PeekAboo(DOMelement, { 
+        overMoreCSS: { 
+        	cssProperty: propertyValue
+        }, 
+        upMoreCSS: { 
+        	cssProperty: propertyValue
+        }, 
+        slideOutTo: 'bottom',
+        slideInFrom: 'bottom',
+        easingMethod: Linear.easeNone,
+        speed: 100,
+        buttonsReady: function(buttons, numButtons){}
+    });
+    
+####jQuery Method: Default Values are Shown
+
+    Code coming soon
+    
+####Required CSS
+
+    Code coming soon
